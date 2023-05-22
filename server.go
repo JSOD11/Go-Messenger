@@ -15,6 +15,7 @@ type UserManager struct {
 
 type User struct {
 	username       string
+	isLoggedIn     bool
 	unreadMessages []string
 }
 
@@ -70,7 +71,7 @@ func (um *UserManager) handleClient(conn net.Conn, clientId byte) {
 		}
 
 		if op == 1 {
-			um.login()
+			um.login(conn, connReader)
 		} else if op == 2 {
 			um.createAccount(conn, connReader)
 		} else if op == 3 {
@@ -82,8 +83,28 @@ func (um *UserManager) handleClient(conn net.Conn, clientId byte) {
 	}
 }
 
-func (um *UserManager) login() byte {
-	return 1
+func (um *UserManager) login(conn net.Conn, connReader *bufio.Reader) {
+	username, err := connReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	username = username[0 : len(username)-1]
+	fmt.Printf("\nNew login attempt: %v : ", username)
+
+	if user, ok := um.users[username]; ok && !user.isLoggedIn {
+		// login attempt is valid
+		fmt.Print("SUCCESS\n\n")
+		user.isLoggedIn = true
+		conn.Write([]byte{utils.SUCCESS})
+		um.logAccounts()
+		um.userMenu(conn, connReader, username)
+	} else {
+		// name does not exist in server, invalid
+		fmt.Print("FAILURE\n\n")
+		conn.Write([]byte{utils.FAILURE})
+	}
 }
 
 func (um *UserManager) createAccount(conn net.Conn, connReader *bufio.Reader) {
@@ -123,13 +144,52 @@ func (um *UserManager) listAccounts(conn net.Conn) {
 
 func (um *UserManager) logAccounts() {
 	fmt.Println("——————————————")
-	if len(um.users) == 1 {
-		fmt.Printf("1 account: \n")
+	if len(um.users) == 0 {
+		fmt.Printf("No accounts on server")
 	} else {
-		fmt.Printf("%v account(s): \n", len(um.users))
-	}
-	for _, user := range um.users {
-		fmt.Println(user.username, ": ", user.unreadMessages)
+		if len(um.users) == 1 {
+			fmt.Printf("1 account: \n")
+		} else {
+			fmt.Printf("%v account(s): \n", len(um.users))
+		}
+		for _, user := range um.users {
+			fmt.Printf("%v | %v | %v\n", user.username, user.isLoggedIn, user.unreadMessages)
+		}
 	}
 	fmt.Println()
+}
+
+func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, username string) {
+	for {
+		// Read the incoming operation client has chosen
+		op, err := connReader.ReadByte()
+		if err != nil {
+			fmt.Println("Error reading message:", err)
+			return
+		}
+
+		if op == 1 {
+			um.routeMessage()
+		} else if op == 2 {
+			um.showMessages()
+		} else if op == 3 {
+			um.users[username].isLoggedIn = false
+			fmt.Printf("%v logged out\n", username)
+			um.logAccounts()
+			break
+		} else if op == 4 {
+			delete(um.users, username)
+			fmt.Printf("Deleted account: %v\n", username)
+			um.logAccounts()
+			break
+		}
+	}
+}
+
+func (um *UserManager) routeMessage() {
+	fmt.Println("Route message")
+}
+
+func (um *UserManager) showMessages() {
+	fmt.Println("Show messages")
 }
