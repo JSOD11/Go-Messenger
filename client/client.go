@@ -119,7 +119,7 @@ func userMenu(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader
 		conn.Write([]byte{op})
 
 		if op == 1 {
-			sendMessage()
+			sendMessage(conn, connReader, inputReader)
 		} else if op == 2 {
 			viewMessages()
 		} else if op == 3 { // log out
@@ -193,8 +193,30 @@ func listAccounts(connReader *bufio.Reader, inputReader *bufio.Reader) {
 	utils.ResetScreen()
 }
 
-func sendMessage() {
-	fmt.Println("Send message")
+func sendMessage(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader) {
+	fmt.Println("———————————————————————————————————————————————")
+	fmt.Printf("Who would you like to send messages to?\n\n")
+	target, err := inputReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
+	utils.ResetScreen()
+
+	// send target username to server
+	conn.Write([]byte(target))
+
+	result, err := connReader.ReadByte()
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+	if result == utils.SUCCESS {
+		fmt.Printf("%v is a valid target\n", target[0:len(target)-1])
+	} else {
+		fmt.Printf("The username you provided does not exist! Please try again.\n")
+	}
 }
 
 func viewMessages() {

@@ -169,7 +169,7 @@ func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, usernam
 		}
 
 		if op == 1 {
-			um.routeMessage()
+			um.routeMessage(conn, connReader, username)
 		} else if op == 2 {
 			um.showMessages()
 		} else if op == 3 {
@@ -186,8 +186,26 @@ func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, usernam
 	}
 }
 
-func (um *UserManager) routeMessage() {
-	fmt.Println("Route message")
+func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, username string) {
+	target, err := connReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	target = target[0 : len(target)-1]
+
+	if targetUser, ok := um.users[target]; ok {
+		// target user exists
+		conn.Write([]byte{utils.SUCCESS})
+		// allow client to send messages
+		fmt.Printf("routeMessage %v -> %v\n", username, targetUser.username)
+	} else {
+		// target user does not exist
+		conn.Write([]byte{utils.FAILURE})
+	}
+
+	um.logAccounts()
 }
 
 func (um *UserManager) showMessages() {
