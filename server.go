@@ -18,7 +18,7 @@ func main() {
 
 	fmt.Println("Server is listening on port", port)
 
-	client_id := 1
+	var clientId byte = 1
 
 	// Accept incoming client connections
 	for {
@@ -28,36 +28,54 @@ func main() {
 			return
 		}
 
-		fmt.Printf("Client connected with id %v!\n", client_id)
+		fmt.Printf("Client connected with id %v!\n", clientId)
 
 		// Handle the connection in a separate goroutine
-		go handleClient(conn, client_id)
+		go handleClient(conn, clientId)
 
-		client_id++
+		clientId++
 	}
 }
 
-func handleClient(conn net.Conn, client_id int) {
+func handleClient(conn net.Conn, clientId byte) {
 
 	defer conn.Close()
+
+	// send client its own ID
+	conn.Write([]byte{clientId})
 
 	reader := bufio.NewReader(conn)
 
 	for {
-		// Read the incoming message
-		message, err := reader.ReadString('\n')
+		// Read the incoming operation client has chosen
+		op, err := reader.ReadByte()
 		if err != nil {
 			fmt.Println("Error reading message:", err)
 			return
 		}
 
-		// Log the received message
-		fmt.Printf("Received message: %q\n", message)
-
-		// Check for an exit condition
-		if message == "exit\n" {
-			fmt.Printf("Client %v disconnected.\n\nListening for new connections...\n\n", client_id)
-			break
+		// receive operation from client
+		if op == 1 {
+			Login()
+		} else if op == 2 {
+			CreateAccount()
+		} else if op == 3 {
+			ListAccounts()
+		} else if op == 4 {
+			fmt.Printf("Client %v disconnected.\n\nListening for new connections...\n\n", clientId)
+			return
 		}
 	}
+}
+
+func Login() byte {
+	return 1
+}
+
+func CreateAccount() byte {
+	return 1
+}
+
+func ListAccounts() byte {
+	return 1
 }
