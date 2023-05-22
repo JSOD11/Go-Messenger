@@ -56,13 +56,11 @@ func main() {
 		} else if op == 2 {
 			createAccount(conn, connReader, inputReader)
 		} else if op == 3 {
-			listAccounts()
+			listAccounts(connReader, inputReader)
 		} else if op == 4 {
 			fmt.Printf("\nDisconnecting client %v from Messenger...\n\n", clientId)
 			break
 		}
-
-		// fmt.Printf("\nMessage: %q, %v\n\n", message, len(message))
 
 		// Send the message to the server
 		_, err = conn.Write([]byte(input))
@@ -109,6 +107,33 @@ func createAccount(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.R
 
 }
 
-func listAccounts() byte {
-	return 1
+func listAccounts(connReader *bufio.Reader, inputReader *bufio.Reader) {
+	scanner := bufio.NewScanner(connReader)
+	scanner.Split(bufio.ScanBytes)
+
+	fmt.Printf("\nAccounts registered on server\n")
+	fmt.Printf("———————————————————————————————————————————————\n")
+
+	var accountName []byte
+	var char byte
+	// read message byte by byte
+	for scanner.Scan() {
+		char = scanner.Bytes()[0]
+		if char == '$' { // $ indicates end of message
+			break
+		} else if char == '\n' { // \n indicates end of accountName
+			fmt.Println(string(accountName))
+			accountName = []byte{}
+		} else {
+			accountName = append(accountName, char)
+		}
+	}
+
+	fmt.Printf("\nPress enter to return to the main menu\n\n")
+	_, err := inputReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+	utils.ResetScreen()
 }

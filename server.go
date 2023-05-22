@@ -74,7 +74,7 @@ func (um *UserManager) handleClient(conn net.Conn, clientId byte) {
 		} else if op == 2 {
 			um.createAccount(conn, connReader)
 		} else if op == 3 {
-			um.listAccounts()
+			um.listAccounts(conn)
 		} else if op == 4 {
 			fmt.Printf("Client %v disconnected.\n\nListening for new connections...\n\n", clientId)
 			return
@@ -108,18 +108,28 @@ func (um *UserManager) createAccount(conn net.Conn, connReader *bufio.Reader) {
 	um.logAccounts()
 }
 
-func (um *UserManager) listAccounts() byte {
-	return 1
+func (um *UserManager) listAccounts(conn net.Conn) {
+	var accountNames []byte
+	for _, user := range um.users {
+		// client will know usernames are split by \n
+		accountNames = append(accountNames, []byte(user.username)...)
+		accountNames = append(accountNames, '\n')
+	}
+	// client will scan for $ which indicates end of message
+	accountNames = append(accountNames, '$')
+	fmt.Printf("\nlistAccounts message: %q\n\n", accountNames)
+	conn.Write(accountNames)
 }
 
 func (um *UserManager) logAccounts() {
+	fmt.Println("——————————————")
 	if len(um.users) == 1 {
 		fmt.Printf("1 account: \n")
 	} else {
 		fmt.Printf("%v account(s): \n", len(um.users))
 	}
-	for username, user := range um.users {
-		fmt.Println(username, user.username, user.unreadMessages)
+	for _, user := range um.users {
+		fmt.Println(user.username, ": ", user.unreadMessages)
 	}
 	fmt.Println()
 }
