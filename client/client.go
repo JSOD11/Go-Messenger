@@ -17,8 +17,8 @@ func main() {
 	}
 	defer conn.Close()
 
-	reader := bufio.NewReader(conn)
-	clientId, err := reader.ReadByte()
+	connReader := bufio.NewReader(conn)
+	clientId, err := connReader.ReadByte()
 	if err != nil {
 		fmt.Println("Error reading byte:", err)
 		return
@@ -26,7 +26,7 @@ func main() {
 
 	fmt.Printf("\nConnected to server with ID %v!\n\n", clientId)
 
-	reader = bufio.NewReader(os.Stdin)
+	inputReader := bufio.NewReader(os.Stdin)
 
 	for {
 		// Read input from the user
@@ -34,13 +34,15 @@ func main() {
 		fmt.Printf("Welcome to Messenger! What would you like to do?\n\n")
 		fmt.Printf("1 > Login\n2 > Create Account\n3 > List Accounts\n4 > Quit Messenger\n\n")
 		fmt.Println("———————————————————————————————————————————————")
-		message, err := reader.ReadString('\n')
+		input, err := inputReader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Error reading input:", err)
 			return
 		}
 
-		valid, op := utils.ValidateOp(message)
+		utils.ResetScreen()
+
+		valid, op := utils.ValidateOp(input)
 		if !valid {
 			fmt.Printf("\nPlease enter 1, 2, 3, or 4.\n\n")
 			continue
@@ -50,11 +52,11 @@ func main() {
 		conn.Write([]byte{op})
 
 		if op == 1 {
-			Login()
+			login()
 		} else if op == 2 {
-			CreateAccount()
+			createAccount(conn, connReader, inputReader)
 		} else if op == 3 {
-			ListAccounts()
+			listAccounts()
 		} else if op == 4 {
 			fmt.Printf("\nDisconnecting client %v from Messenger...\n\n", clientId)
 			break
@@ -63,7 +65,7 @@ func main() {
 		// fmt.Printf("\nMessage: %q, %v\n\n", message, len(message))
 
 		// Send the message to the server
-		_, err = conn.Write([]byte(message))
+		_, err = conn.Write([]byte(input))
 		if err != nil {
 			fmt.Println("Error sending message:", err)
 			return
@@ -73,14 +75,40 @@ func main() {
 	}
 }
 
-func Login() byte {
+func login() byte {
 	return 1
 }
 
-func CreateAccount() byte {
-	return 1
+func createAccount(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader) {
+	fmt.Println("Create Account")
+	fmt.Println("———————————————————————————————————————————————")
+	fmt.Printf("Please enter a username: \n\n")
+
+	username, err := inputReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+	utils.ResetScreen()
+
+	// send username to server for processing
+	conn.Write([]byte(username))
+
+	// server sends back success or failure
+	result, err := connReader.ReadByte()
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+
+	if result == utils.SUCCESS {
+		fmt.Printf("Successfully created account with username %v!\n", username[0:len(username)-1])
+	} else {
+		fmt.Printf("The username you provided has already been taken. Please try again.\n")
+	}
+
 }
 
-func ListAccounts() byte {
+func listAccounts() byte {
 	return 1
 }

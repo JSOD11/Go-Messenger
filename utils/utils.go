@@ -1,5 +1,7 @@
 package utils
 
+import "github.com/inancgumus/screen"
+
 func ValidateOp(message string) (bool, byte) {
 	op := message[0] - '0'
 	invalidInput := true
@@ -15,4 +17,9 @@ func ValidateOp(message string) (bool, byte) {
 	}
 
 	return true, op
+}
+
+func ResetScreen() {
+	screen.Clear()
+	screen.MoveTopLeft()
 }
