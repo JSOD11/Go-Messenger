@@ -171,7 +171,7 @@ func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, usernam
 		if op == 1 {
 			um.routeMessage(conn, connReader, username)
 		} else if op == 2 {
-			um.showMessages()
+			um.showMessages(conn, connReader, username)
 		} else if op == 3 {
 			um.users[username].isLoggedIn = false
 			fmt.Printf("%v logged out\n", username)
@@ -199,7 +199,18 @@ func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, use
 		// target user exists
 		conn.Write([]byte{utils.SUCCESS})
 		// allow client to send messages
-		fmt.Printf("routeMessage %v -> %v\n", username, targetUser.username)
+		fmt.Printf("Routing messages %v -> %v\n", username, targetUser.username)
+		for {
+			message, err := connReader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Error:", err.Error())
+				return
+			}
+			if message == "\\E\n" {
+				break
+			}
+			targetUser.unreadMessages = append(targetUser.unreadMessages, message[0:len(message)-1])
+		}
 	} else {
 		// target user does not exist
 		conn.Write([]byte{utils.FAILURE})
@@ -208,6 +219,16 @@ func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, use
 	um.logAccounts()
 }
 
-func (um *UserManager) showMessages() {
-	fmt.Println("Show messages")
+func (um *UserManager) showMessages(conn net.Conn, connReader *bufio.Reader, username string) {
+	var messagesList []byte
+	for _, message := range um.users[username].unreadMessages {
+		// client will know messages are split by \n
+		messagesList = append(messagesList, []byte(message)...)
+		messagesList = append(messagesList, '\n')
+	}
+	// client will scan for $ which indicates end of message
+	messagesList = append(messagesList, '$')
+	fmt.Printf("\nshowMessages message: %q\n\n", messagesList)
+	conn.Write(messagesList)
+	um.users[username].unreadMessages = []string{}
 }

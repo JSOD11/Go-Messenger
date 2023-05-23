@@ -121,7 +121,7 @@ func userMenu(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader
 		if op == 1 {
 			sendMessage(conn, connReader, inputReader)
 		} else if op == 2 {
-			viewMessages()
+			viewMessages(connReader, inputReader)
 		} else if op == 3 { // log out
 			fmt.Printf("%v logged out\n\n", username)
 			break
@@ -213,12 +213,53 @@ func sendMessage(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Rea
 		return
 	}
 	if result == utils.SUCCESS {
-		fmt.Printf("%v is a valid target\n", target[0:len(target)-1])
+		fmt.Println("———————————————————————————————————————————————")
+		fmt.Printf("Sending messages to %v. Enter \\E to exit.\n\n", target[0:len(target)-1])
+		for {
+			message, err := inputReader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Error reading input:", err)
+				return
+			}
+			//fmt.Printf("%q\n", message)
+			conn.Write([]byte(message))
+			if message == "\\E\n" {
+				break
+			}
+		}
+		utils.ResetScreen()
 	} else {
 		fmt.Printf("The username you provided does not exist! Please try again.\n")
 	}
 }
 
-func viewMessages() {
-	fmt.Println("View messages")
+func viewMessages(connReader *bufio.Reader, inputReader *bufio.Reader) {
+	scanner := bufio.NewScanner(connReader)
+	scanner.Split(bufio.ScanBytes)
+
+	fmt.Printf("\nUnread messages\n")
+	fmt.Printf("———————————————————————————————————————————————\n")
+
+	var message []byte
+	var char byte
+	// read message byte by byte
+	for scanner.Scan() {
+		char = scanner.Bytes()[0]
+		if char == '$' { // $ indicates end of unread messages
+			break
+		} else if char == '\n' { // \n indicates end of accountName
+			fmt.Println(string(message))
+			message = []byte{}
+		} else {
+			message = append(message, char)
+		}
+	}
+
+	fmt.Printf("\nPress enter to return to the main menu\n\n")
+	_, err := inputReader.ReadString('\n')
+	if err != nil {
+		fmt.Println("Error reading input:", err)
+		return
+	}
+	utils.ResetScreen()
 }
