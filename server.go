@@ -27,22 +27,15 @@ func main() {
 	}
 
 	// Start the server and listen on a specific port
+	ipAddress := "0.0.0.0"
 	port := ":8080"
-	listener, err := net.Listen("tcp", port)
-	if err != nil {
-		fmt.Println("Error listening:", err.Error())
-		return
-	}
+	listener, _ := net.Listen("tcp", ipAddress+port)
 	defer listener.Close()
 	fmt.Printf("Server is listening on port %v\n", port)
 
 	// Accept incoming client connections
 	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Println("Error accepting connection:", err.Error())
-			return
-		}
+		conn, _ := listener.Accept()
 
 		fmt.Printf("Client connected with id %v!\n", um.idCounter)
 
@@ -64,11 +57,7 @@ func (um *UserManager) handleClient(conn net.Conn, clientId byte) {
 
 	for {
 		// Read the incoming operation client has chosen
-		op, err := connReader.ReadByte()
-		if err != nil {
-			fmt.Println("Error reading message:", err)
-			return
-		}
+		op, _ := connReader.ReadByte()
 
 		if op == 1 {
 			um.login(conn, connReader)
@@ -84,11 +73,7 @@ func (um *UserManager) handleClient(conn net.Conn, clientId byte) {
 }
 
 func (um *UserManager) login(conn net.Conn, connReader *bufio.Reader) {
-	username, err := connReader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return
-	}
+	username, _ := connReader.ReadString('\n')
 
 	username = username[0 : len(username)-1]
 	fmt.Printf("\nNew login attempt: %v : ", username)
@@ -108,11 +93,7 @@ func (um *UserManager) login(conn net.Conn, connReader *bufio.Reader) {
 }
 
 func (um *UserManager) createAccount(conn net.Conn, connReader *bufio.Reader) {
-	username, err := connReader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return
-	}
+	username, _ := connReader.ReadString('\n')
 
 	username = username[0 : len(username)-1]
 
@@ -162,11 +143,7 @@ func (um *UserManager) logAccounts() {
 func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, username string) {
 	for {
 		// Read the incoming operation client has chosen
-		op, err := connReader.ReadByte()
-		if err != nil {
-			fmt.Println("Error reading message:", err)
-			return
-		}
+		op, _ := connReader.ReadByte()
 
 		if op == 1 {
 			um.routeMessage(conn, connReader, username)
@@ -187,11 +164,7 @@ func (um *UserManager) userMenu(conn net.Conn, connReader *bufio.Reader, usernam
 }
 
 func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, username string) {
-	target, err := connReader.ReadString('\n')
-	if err != nil {
-		fmt.Println("Error:", err.Error())
-		return
-	}
+	target, _ := connReader.ReadString('\n')
 
 	target = target[0 : len(target)-1]
 
@@ -201,11 +174,7 @@ func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, use
 		// allow client to send messages
 		fmt.Printf("Routing messages %v -> %v\n", username, targetUser.username)
 		for {
-			message, err := connReader.ReadString('\n')
-			if err != nil {
-				fmt.Println("Error:", err.Error())
-				return
-			}
+			message, _ := connReader.ReadString('\n')
 			if message == "\\E\n" {
 				break
 			}
