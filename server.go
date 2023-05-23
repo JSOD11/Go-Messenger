@@ -209,7 +209,9 @@ func (um *UserManager) routeMessage(conn net.Conn, connReader *bufio.Reader, use
 			if message == "\\E\n" {
 				break
 			}
-			targetUser.unreadMessages = append(targetUser.unreadMessages, message[0:len(message)-1])
+			userMessage := append([]byte(username), ':', ' ')
+			userMessage = append(userMessage, []byte(message[0:len(message)-1])...)
+			targetUser.unreadMessages = append(targetUser.unreadMessages, string(userMessage))
 		}
 	} else {
 		// target user does not exist

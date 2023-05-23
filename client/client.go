@@ -11,7 +11,9 @@ import (
 
 func main() {
 	// connect to server
-	conn, err := net.Dial("tcp", "localhost:8080")
+	ipAddress := "0.0.0.0"
+	port := ":8080"
+	conn, err := net.Dial("tcp", ipAddress+port)
 	if err != nil {
 		fmt.Println("Error connecting to the server:", err)
 		return
@@ -90,7 +92,7 @@ func login(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader) {
 		//fmt.Printf("Successfully logged in with username %v!\n", username[0:len(username)-1])
 		userMenu(conn, connReader, inputReader, username[0:len(username)-1])
 	} else {
-		fmt.Printf("User does not exist or is alread logged in. Please try again or create a new account.\n")
+		fmt.Printf("User does not exist or is already logged in. Please try again or create a new account.\n")
 	}
 }
 
@@ -121,7 +123,7 @@ func userMenu(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Reader
 		if op == 1 {
 			sendMessage(conn, connReader, inputReader)
 		} else if op == 2 {
-			viewMessages(connReader, inputReader)
+			viewMessages(connReader, inputReader, username)
 		} else if op == 3 { // log out
 			fmt.Printf("%v logged out\n\n", username)
 			break
@@ -233,11 +235,11 @@ func sendMessage(conn net.Conn, connReader *bufio.Reader, inputReader *bufio.Rea
 	}
 }
 
-func viewMessages(connReader *bufio.Reader, inputReader *bufio.Reader) {
+func viewMessages(connReader *bufio.Reader, inputReader *bufio.Reader, username string) {
 	scanner := bufio.NewScanner(connReader)
 	scanner.Split(bufio.ScanBytes)
 
-	fmt.Printf("\nUnread messages\n")
+	fmt.Printf("\n%v's unread messages\n", username)
 	fmt.Printf("———————————————————————————————————————————————\n")
 
 	var message []byte
