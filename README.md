@@ -16,4 +16,4 @@ In a separate terminal, switch into the `go-messenger/client` directory and star
 ```
 go run .
 ```
-This will pull up a menu with options to login, create an account, list accounts, or quit. After creating an account and logging in, a user can send messages to other users, view their own messages, log out, or delete their account. Multiple clients can connect to the server concurrently.
+This will pull up a menu with options to login (1), create an account (2), list accounts (3), or quit (4). To take one of these actions, enter the corresponding number and hit enter in the terminal. After creating an account and logging in, a user can send messages to other users (1), view their own messages (2), log out (3), or delete their account (4). Multiple clients can connect to the server concurrently. The system is designed such that duplicate accounts cannot be created. While one client is logged in to a user account, other clients will not be able to log in to that account. If a user deletes their account, all their unread messages are lost. The data is stored within the server and does not persist when the server is shut down.
