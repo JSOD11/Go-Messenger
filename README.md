@@ -2,6 +2,8 @@
 
 Rebuild of a distributed messenger system I built in CS 262 for fun and as I learn Go. See JSOD11/CS262-Messenger for the Python build.
 
+<img width="1220" alt="Screenshot 2023-05-24 at 3 26 02 PM" src="https://github.com/JSOD11/Go-Messenger/assets/55005116/a09b5080-5e59-45c8-ab45-e98c2a538184">
+
 # Usage
 
 ## Server
